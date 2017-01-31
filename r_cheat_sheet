@@ -4,28 +4,56 @@ R Cheat Sheet
 
 Getting Help
 ------------
-help(c)  -->  Get help on 'c'
+help(c)
 ?c
 
 
 View Examples
 -------------
-example(c)  -->  View example of 'c'
+example(c)
 
 
 Search for Help on a Topic
 --------------------------
-help.search("regression")  -->  Search for help on 'regression'
+help.search("regression")
 ??regression
 
 
 Help on Specific Library
 ------------------------
-library(help="tm")  -->  Get help on 'tm' library
+library(help="tm")
 
 
 Access Package Vignette
 -----------------------
-vignette("tm")  -->  Access tm's vignette
+vignette("tm")
+
+
+View Loaded Packages
+--------------------
+library()
+
+
+Load a Package
+--------------
+library(tm)
+
+
+View Installed Packages
+-----------------------
+installed.packages()
+
+
+Install a Package
+-----------------
+install.packages("tm")
+
+
+Unload a Package
+----------------
+detach("package:tm", unload = TRUE)
+
+
+
 
 
