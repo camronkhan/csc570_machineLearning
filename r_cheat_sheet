@@ -1,0 +1,31 @@
+=============
+R Cheat Sheet
+=============
+
+Getting Help
+------------
+help(c)  -->  Get help on 'c'
+?c
+
+
+View Examples
+-------------
+example(c)  -->  View example of 'c'
+
+
+Search for Help on a Topic
+--------------------------
+help.search("regression")  -->  Search for help on 'regression'
+??regression
+
+
+Help on Specific Library
+------------------------
+library(help="tm")  -->  Get help on 'tm' library
+
+
+Access Package Vignette
+-----------------------
+vignette("tm")  -->  Access tm's vignette
+
+
