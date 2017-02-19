@@ -1,0 +1,169 @@
+---
+title: "Wisconsin Breast Cancer Notebook"
+output: html_notebook
+---
+
+### Import data
+
+```{r}
+wbcd_original <- read.csv("../../data/wisc_bc_data.csv", stringsAsFactors = FALSE)
+str(wbcd)
+```
+
+Remove first column (patientID) since it is irrelevant data
+
+```{r}
+wbcd <- wbcd_original[-1]
+head(wbcd)
+```
+
+The variable diagnosis indicates whether the patient has a benign or malignant mass
+
+Convert feature to a factor and re-label "B" as "Benign" and "M" as "Malignant"
+
+```{r}
+wbcd$diagnosis <- factor(wbcd$diagnosis, levels = c("B", "M"), labels = c("Benign", "Malignant"))
+print("Value Count")
+table(wbcd$diagnosis)
+print("Rounded Proportions")
+round(prop.table(table(wbcd$diagnosis)) * 100, digits = 1)
+```
+
+View summary of data to determine if values must be resacaled
+
+```{r}
+str(wbcd)
+```
+
+Features are measured on different scales - i.e., area_mean is measured in the hundreds while smoothness_mean is less than 1
+
+This is confirmed by the summary function
+
+```{r}
+summary(wbcd[c("radius_mean", "area_mean", "smoothness_mean")])
+```
+
+We will normalize features using min-max normalization
+
+First, we define normalize() function, which takex a vector x of numeric values, and for each value in x, subtracts the minimum value in x and divides by the range of values in x
+
+```{r}
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+```
+
+Use lapply() function to normalize all features at once
+
+The function lapply(x, func) returns a list of the same length as x, each element of which is the result of applying the function to the corresponding element of x
+
+We will apply the normalize function to each feature and convert the list returned by lapply() to a data frame, using the as.data.frame() function
+
+Note: The first column is skipped because it contains factors (labels)
+
+```{r}
+wbcd_n <- as.data.frame(lapply(wbcd[2:31], normalize))
+```
+
+We will now split the data set into two sets: a training set and a test set
+
+Training set will include first 469 records and test set will include last 100 (we are assuminng the original data set was ordered randomly, so our choice of consecutive records should not be considered biased)
+
+```{r}
+wbcd_train <- wbcd_n[1:469,]   # selects all columns of the first 469 rows
+wbcd_test <- wbcd_n[470:569,]  # selects all columns of the last 100 rows
+```
+
+Before we can run the k-NN algorithm we must store the labels - i.e., the values of the diagnosis variable s for each patient record
+
+The label is the dependent variable
+
+```{r}
+wbcd_train_labels <- wbcd[1:469, 1]   # selects the first column from rows 1:468
+wbcd_test_labels <- wbcd[470:569, 1]  # selects the first column from rows 470:569
+```
+
+One implementation of kNN is the knn() function for the package 'class'
+
+The function uses the majority vote of the k nearest neighbors to decide the label of a new data instance, with ties broken at random
+
+The package 'class' usually comes preinstalled, but we must load it before running knn()
+
+```{r}
+library(class)
+```
+
+The general format of the knn() function is as follows:
+
+knn(train, test, cl, k = 1, l = 0, prob = FALSE, use.all = TRUE)
+
+Where
+  train - matrix/vector or data frame of training set
+  test - matrix/vector or data frame of test set cases
+  cl - the factor of true classifications of training set
+  k - the number of neighbors considered
+  
+The attributes l, prob, and use.all are optional
+  l - minimum vote for definite decision (less than k-l dissenting votes are allowed)
+  prob - if true the proportion of the votes for the winning class are returned as attribute prob
+  use.all - controls handling of ties (if true all distances equal to the k-th largest are included,     otherwise a random selection of distances equal to the k-th is chosen)
+  
+The knn() function returns a factor of classifications of the test set
+
+Usually, one runs the knn() function with the following typical attributes: knn(train, test, cl, k)
+
+```{r}
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = wbcd_train_labels, k = 21)
+```
+
+The wbcd_test_pred is the prediction vector that holds the predicted values
+
+What remains to be done is to evaluate the algorithm performance by comparing the prediction vector wbcd_test_pred with the test vector wbcd_test
+
+Since both vectors are nominal (values of Benign or Malignant), we can create a cross tab of predicted and true labels using the CrossTable function for the gmodels package
+
+```{r}
+library(gmodels)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq = FALSE)
+```
+
+We can see a mismatch of two 2 on the intersection of the malignant row and benign column
+
+The two types of error are possible
+  False Positive: a benign record is classified as malignant
+  False Negative: a malignant record is classified as benign
+  
+In this scenario, false negatives are more dangerous than false positives because people with malignant tumors would not get correctly diagnosed
+
+The algorithm made two false negative errors and zero false positive errors
+
+In general, the error rate is 2% (98% of the examples were correctly classified)
+
+One way to improve the k-NN algorithm performance is by adjusting k; however, in our case, trying different k values with the same training and validation sets does not have a significant impact on the algorithm performance (the worst case is k=1)
+
+Another technique that can be used to imporve model performance is z-score normalization
+
+The z-score measures how far (in standard deviations) each value is from the mean
+
+Using z-score instead of min-max normalization allows the outliers to be weighted more heavily in the distance calculation since most valueus are usually within +/-3 standard deviations from the mean
+
+There is a built in scale() function, which rescales values using the z-score standardization; this function can be applied directly to a data frame and there is no need to use the lapply() function
+
+```{r}
+wbcd_z <- as.data.frame(scale(wbcd[-1]))  # excludes diagnosis column since it is nominal
+```
+
+We use the same records as training and validation sets
+
+```{r}
+wbcd_train <- wbcd_z[1:469,]
+wbcd_test <- wbcd_z[470:569,]
+wbcd_train_labels <- wbcd[1:469, 1]
+wbcd_test_labels <- wbcd[470:569, 1]
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = wbcd_train_labels, k = 21)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq = FALSE)
+```
+
+We get 5 false negatives, so z-score normalization does not improve performanace in this particular case
+
+Running the knn function with different values of k does not improve performance either
