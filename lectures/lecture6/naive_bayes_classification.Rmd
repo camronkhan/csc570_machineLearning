@@ -1,0 +1,248 @@
+---
+title: "Naive Bayes Classification"
+output: html_notebook
+---
+
+```{r}
+sms_raw <- read.csv("../../data/sms_spam.csv", stringsAsFactors = FALSE)
+str(sms_raw)
+```
+
+Since the labels are character strings, it is good practice to convert them into factors
+
+```{r}
+sms_raw$type <- factor(sms_raw$type)
+table(sms_raw$type)
+```
+
+Before we can run the Bayes classifier, we need to preprocess the text in order to remove punctuation and stop words.  We also need to divide messages in words, extract words, and build frequency tables.
+
+Most of the text preprocessing is contained in the package "tm"
+
+```{r}
+install.packages("tm")
+library(tm)
+```
+
+In general, NLP is done on big text collections called corpora.  You can create a corpus in tm using the VCorpus() function, which creates a "volatile corpus" - i.e., in memory corpus.  In contrast, the PCorpus() function creates a "permanent corpus" residing in storage.
+
+The VectorSource() function creates a source object from the sms_raw$text vector and passes the source object to the VCorpus() function.  Other possible sources are DataframeSource, DirSource, URISource, "XMLSource", and ZipSource.
+
+```{r}
+sms_corpus <- VCorpus(VectorSource(sms_raw$text))
+print(sms_corpus)
+```
+
+The inspect(sms_corpus) function provides a brief summary of each element of the corpus.  Because every corpus is a list, you can apply the inspect() function to specific elements.
+
+```{r}
+#inspect(sms_corpus)
+```
+
+To view the content of the 5th message you can run as.character()
+NOTE: Double brackets must be used on the indexer
+
+```{r}
+as.character((sms_corpus[[5]]))
+```
+
+To view several messages, use lapply(), which takes to arguments - a list and a function, and applies the function on each component of the list
+
+```{r}
+lapply(sms_corpus[5:6], as.character)
+```
+
+Before we can extract words from the corpus, it must be standardized.  For example, all uppercase characters must be transformed to lowercase.
+
+The function tm_map() takes a corpus and a transformation function as arguments and applies the transformation function to each document in the corpus and yields the resulting corpus.
+
+NOTE: The function tolower() requires the wrapper function content_transformer() to get and set the content of each document while removeNumbers() does not (because it belongs to the tm package).
+
+We also remove the stop words with the built-in stopwords() function, which returns a list of 174 stop words in English.
+
+NOTE: The format of the function tm_map is a bit unusual - all arguments for the transformation function are listed after the transformation function.  Despite the fact that stopwords() is an argument of removeWords(), it is listed after removeWords() as a sibling argument of tm_map().
+
+```{r}
+#sms_corpus_clean <- tm_map(sms_corpus, content_transformer(tolower))
+#sms_corpus_clean <- tm_map(sms_corpus_clean, PlainTextDocument)
+#sms_corpus_clean <- tm_map(sms_corpus_clean, removeNumbers)
+#sms_corpus_clean <- tm_map(sms_corpus_clean, removeWords, stopwords())
+```
+
+We could remove all punctuation by passing the removePunctuation() method as an argument to tm_map; however, some words that were previously separated by only punctuation would become concatenated.
+
+Instead, we will use custom function to replace punctuation with whitespace.
+
+```{r}
+#replacePunctuation <- function(x) { gsub("[[:punct:]]+", " ", x) }
+#sms_corpus_clean <- tm_map(sms_corpus_clean, replacePunctuation)
+```
+
+Next, we must perform stemming - converting all inflected or derived words to their stems.  We will use the stemDocument() function from SnowballC package to perform stemming.
+
+```{r}
+#install.packages("SnowballC")
+#library(SnowballC)
+#sms_corpus_clean <- tm_map(sms_corpus_clean, stemDocument)
+```
+
+The last step in cleaning and standardizing the corpus is removing additional whitespace using the stripWhiteSpace() function.  The function only removes any additional whitespace rather than single whitespaces.
+
+```{r}
+#sms_corpus_clean <- tm_map(sms_corpus_clean, stripWhitespace)
+```
+
+This completes the standardization and cleaning phase.
+
+The next phase is to split each document into words, a procss called tokenization.  The result is usually stored as a document-term matrix (DTM) or a term-document maxtrix (TDM).  These are matrices that describe the frequency of terms that occur in a collection of documents.
+
+DTM: Rows = documents, Columns = words.
+TDM: Rows = words, Columns = documents.
+
+NOTE: The term-document matrix (TDM) is the inverse of the document-term matrix (DTM).
+
+A DTM can be created using the DocumentTermMatrix() function
+
+NOTE: This function allows optional arguments for performing data cleaning standardization, and tokenization to be done in a single function call.
+
+```{r}
+#sms_dtm <- DocumentTermMatrix(sms_corpus_clean)
+sms_dtm <- DocumentTermMatrix(sms_corpus, control = list(tolower = TRUE, removeNumbers = TRUE, stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE))
+```
+
+The next phase is to create the training and test datasets.  We'll divide the data into two portions: 75% training and 25% testing.  This corresponds to 4,169 documents for training and 1,390 for testing.  Assuming that the documents are stored randomly, we can take the first 4,169 for training, and the remainder for testing.
+
+NOTE: Text corpora are similar to dataframes, allowing row and column selection.
+
+```{r}
+sms_dtm_train <- sms_dtm[1:4169, ]
+sms_dtm_test <- sms_dtm[4170:5559, ]
+```
+
+The next two commands extract the labels from the raw data.
+
+```{r}
+sms_train_labels <- sms_raw[1:4169, ]$type
+sms_test_labels <-sms_raw[4170:5559, ]$type
+```
+
+Creating a Word Cloud
+
+```{r}
+#install.packages("wordcloud")
+#library(wordcloud)
+#wordcloud(sms_corpus_clean, min.freq = 50, random.order = FALSE)
+```
+
+Finding Frequent Words
+
+The DTM we have created is sparse, i.e., most of its cells are zeroes. We will
+remove the words that appear no more than 5 times. First, we find the words that
+appear 5 time or more:
+
+The sms_freq_words vector includes all words that appear at least 5 times. Then,
+we apply column selection using the vector sms_freq_words as column index to
+select only the columns with the most frequent words from the training and the test
+datasets
+
+By doing this we have reduced the number of features (words) from about 7500 to
+1180
+
+```{r}
+sms_freq_words <- findFreqTerms(sms_dtm_train, 5)
+sms_dtm_freq_train <- sms_dtm_train[ , sms_freq_words]
+sms_dtm_freq_test <- sms_dtm_test[ , sms_freq_words]
+```
+
+Since the Naive Bayes classifier is typically trained on data with categorical
+features (a feature is present or not), we will convert the numerical counts (of the
+appearances of a word in a document) in the DTM to categorical “Yes” or “No”.
+First, we define a function called convert_counts() which converts a numerical
+count to “Yes” if the count is greater than zero. Otherwise, the count is converted to
+“No”:
+
+```{r}
+convert_counts <- function(x) { x <- ifelse(x > 0, "Yes", "No") }
+```
+
+Then, we will apply the function convert_counts() to each column on the DTM. This
+will be done with the apply() function, which takes an array or matrix and a function
+as attributes and applies the function to each row or column:
+
+MARGIN = 2 indicates that the function must be applied to each column, whereas
+MARGIN = 1 indicates that the function is applied to each row.
+
+```{r}
+sms_train <- apply(sms_dtm_freq_train, MARGIN = 2, convert_counts)
+sms_test <- apply(sms_dtm_freq_test, MARGIN = 2, convert_counts)
+```
+
+The Naive Bayes implementation we will use is the naiveBayes() function in the e1071
+package
+
+```{r}
+install.packages("e1071")
+library(e1071)
+```
+
+Unlike the k-NN algorithm we used for classification in the previous chapter, a Naive
+Bayes learner is trained and used for classification in separate steps. First, we create
+a naïve Bayes model using the training data in the sms_train matrix and the vector of
+labels, sms_train_labels:
+
+```{r}
+sms_classifier <- naiveBayes(sms_train, sms_train_labels)
+```
+
+Then, we use the model to make predictions on the test data and save the vector of
+labels in sms_test_pred:
+
+```{r}
+sms_test_pred <- predict(sms_classifier, sms_test)
+```
+
+To evaluate the model performance we will create a crosstab on the actual and
+predicted data:
+
+The arguments prop.chisq = FALSE and prop.t = FALSE eliminate the unnecessary
+proportions in the crosstab. The dnn attribute renames the rows and columns.
+
+```{r}
+library(gmodels)
+CrossTable(sms_test_pred, sms_test_labels, prop.chisq = FALSE, prop.t = FALSE, dnn = c('predicted', 'actual'))
+```
+
+The crosstab shows that the Bayes classifier made 34 mistakes, corresponding to
+an error rate of 2,4%. Out of these 34 mistakes, 4 are false positives (a ham
+message is predicted as spam) and 30 are false negatives (a spam message is
+predicted as ham). Different domains require a different balance between false
+positives and false negatives. In the cancer diagnosis domain, it could be more
+important to reduce false negatives than false positives because false negatives
+could result in an undiagnosed disease . In the spam filter domain, false positives
+could be more important than false negatives because false negatives could result
+in undelivered/lost email.
+
+We will try to improve the model by using a Laplacian correction (the model
+was previously built with laplace = 0 by default):
+
+```{r}
+sms_classifier2 <- naiveBayes(sms_train, sms_train_labels, laplace = 1)
+sms_test_pred2 <- predict(sms_classifier2, sms_test)
+CrossTable(sms_test_pred2, sms_test_labels, prop.chisq = FALSE, prop.t = FALSE, prop.r = FALSE, dnn = c('predicted', 'actual'))
+```
+
+The number of false positives remains the same, 4, whereas the number of
+false negatives is reduced from 30 to 27. 
+
+Strengths:
+- Simple, easy to implement
+- Can deal well with large feature spaces (due to the classconditional independence assumption)
+- Fast learning
+
+Weaknesses:
+- Not ideal for datasets with many numeric features
+- Estimated probabilities are less reliable than the predicted
+classes
+- Splits phrases into single words. For example, “Chicago bulls” will be split into “Chicago” and “Bulls”, thereby losing the meaning the phrase.
+- Relies on an often-faulty assumption of equally important and independent features
+
