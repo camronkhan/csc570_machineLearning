@@ -1,0 +1,59 @@
+---
+title: "HW #2 - K-Nearest Neighbors"
+output: html_notebook
+---
+
+```{r}
+# load data
+data = read.csv("../../data/Auto.csv", stringsAsFactors = FALSE)
+```
+
+```{r}
+# get summary of data
+str(data)
+```
+
+This dataset consists of 397 observations of 9 variables.  The variables mpg, displacement, and acceleration are numeric (decimal/double).  The variables cylinders, weight, year, and origin are integers.  The variables horsepower and name are character objects (string).  Horsepower and year are noteable variables.  Horsepower is stored as character despite being best stored as integer data.  Year appears to store the last two digits of the full year (i.e., 19XX).
+
+```{r}
+# convert horsepower from character to integer
+data$horsepower <- as.integer(data$horsepower)
+```
+
+```{r}
+# remove any observation where horsepower == NA
+data <- data[!is.na(data$horsepower),]
+```
+
+
+```{r}
+# scatterplots
+mpg <- data$mpg
+cylinders <- data$cylinders
+displacement <- data$displacement
+horsepower <- data$horsepower
+weight <- data$weight
+acceleration <- data$acceleration
+year <- data$year
+origin <- data$origin
+plot(cylinders, mpg, main = "mpg vs cylinders", xlab = "cylinders", ylab = "mpg")
+plot(displacement, mpg, main = "mpg vs displacement", xlab = "displacement", ylab = "mpg")
+plot(horsepower, mpg, main = "mpg vs horsepower", xlab = "horsepower", ylab = "mpg")
+plot(weight, mpg, main = "mpg vs weight", xlab = "weight", ylab = "mpg")
+plot(acceleration, mpg, main = "mpg vs acceleration", xlab = "acceleration", ylab = "mpg")
+plot(year, mpg, main = "mpg vs year", xlab = "year", ylab = "mpg")
+plot(origin, mpg, main = "mpg vs origin", xlab = "origin", ylab = "mpg")
+```
+
+```{r}
+# create new variable, mpg1, where 1 if mpg > median mpg value, otherwise 0
+data$mpg1 <- sapply(data$mpg, function(x) { if(x > median(data$mpg)) 1 else 0 })
+```
+
+
+
+
+
+
+
+
