@@ -4,6 +4,12 @@ output: html_notebook
 ---
 
 ```{r}
+install.packages("caret")
+library(caret)
+```
+
+
+```{r}
 # load data
 data = read.csv("../../data/Auto.csv", stringsAsFactors = FALSE)
 ```
@@ -52,8 +58,31 @@ data$mpg1 <- sapply(data$mpg, function(x) { if(x > median(data$mpg)) 1 else 0 })
 
 
 
+```{r}
+# select independent and dependent variables
+X <- subset(data, select = c("weight", "displacement", "cylinders", "horsepower"))
+y <- data$mpg1
+```
 
 
+
+```{r}
+# set random seed for reproducibility
+set.seed(33)
+```
+
+
+```{r}
+# normalization
+normalize <- function(x) { return ((x - min(x)) / (max(x) - min(x))) }
+X_normal <- as.data.frame(lapply(X, normalize))
+```
+
+
+```{r}
+dummies <- dummyVars("~ .", data = data)
+head(predict(dummies, newdata = data))
+```
 
 
 
