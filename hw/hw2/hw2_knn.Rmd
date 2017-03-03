@@ -4,36 +4,39 @@ output: html_notebook
 ---
 
 ```{r}
+# 0. Install dependencies.
 install.packages("caret")
 library(caret)
+library(class)
+install.packages("gmodels")
+library(gmodels)
 ```
 
 
 ```{r}
-# load data
+# 1. Download the dataset Auto.csv.
 data = read.csv("../../data/Auto.csv", stringsAsFactors = FALSE)
 ```
 
 ```{r}
-# get summary of data
+# 2. Explore the overall structure of the datasetusing str(). Describe it one paragraph.
 str(data)
 ```
 
 This dataset consists of 397 observations of 9 variables.  The variables mpg, displacement, and acceleration are numeric (decimal/double).  The variables cylinders, weight, year, and origin are integers.  The variables horsepower and name are character objects (string).  Horsepower and year are noteable variables.  Horsepower is stored as character despite being best stored as integer data.  Year appears to store the last two digits of the full year (i.e., 19XX).
 
 ```{r}
-# convert horsepower from character to integer
+# 3. Convert the attribute horsepower from character to integer.
 data$horsepower <- as.integer(data$horsepower)
 ```
 
 ```{r}
-# remove any observation where horsepower == NA
+# 4. The horsepower attribute has some missing values. Remove the observations with missing values, i.e., delete the rows with missing values from the data frame.
 data <- data[!is.na(data$horsepower),]
 ```
 
-
 ```{r}
-# scatterplots
+# 5. Explore the data in order to investigate the association between mpg and the other features. Which of the other features seem most likely to be useful in predicting mpg (scatterplots may be useful tools to answer this question). Describe your findings.
 mpg <- data$mpg
 cylinders <- data$cylinders
 displacement <- data$displacement
@@ -51,38 +54,66 @@ plot(year, mpg, main = "mpg vs year", xlab = "year", ylab = "mpg")
 plot(origin, mpg, main = "mpg vs origin", xlab = "origin", ylab = "mpg")
 ```
 
+TODO: Describe your findings.
+
 ```{r}
-# create new variable, mpg1, where 1 if mpg > median mpg value, otherwise 0
+# 6. Create a new attribute mpg1 that contains 1 if mpg is strictly greater than its median, and 0 if mpg is equal or less than its median. 
 data$mpg1 <- sapply(data$mpg, function(x) { if(x > median(data$mpg)) 1 else 0 })
 ```
 
-
-
 ```{r}
-# select independent and dependent variables
-X <- subset(data, select = c("weight", "displacement", "cylinders", "horsepower"))
-y <- data$mpg1
+# 7. Decide which attributes you are going to use to predict mpg1. Remove all remaining attributes, including mpg.
+data_keep <- subset(data, select = c("mpg1", "weight", "displacement", "cylinders", "horsepower"))
 ```
 
-
-
 ```{r}
-# set random seed for reproducibility
-set.seed(33)
+# 8. Set the seed of the random number generator to a fixed integer, say 1, so that you can reproduce your work.
+set.seed(1)
 ```
 
-
 ```{r}
-# normalization
+# 9. Normalize the attribute values
 normalize <- function(x) { return ((x - min(x)) / (max(x) - min(x))) }
-X_normal <- as.data.frame(lapply(X, normalize))
+data_normal <- as.data.frame(lapply(data_keep, normalize))
 ```
-
 
 ```{r}
-dummies <- dummyVars("~ .", data = data)
-head(predict(dummies, newdata = data))
+# 10. Randomize the order of the rows in the dataset   df1[sample(nrow(df1)),]
+data_random <- data_normal[sample(nrow(data_normal)), ]
 ```
+
+```{r}
+# 11. Split the data into a training set and a test set. Use a test set of 100 rows.
+data_train <- data_random[1:(nrow(data_random)-100), ]
+data_test <- data_random[(nrow(data_random)-99):nrow(data_random), ]
+X_train <- data_train[,2:ncol(data_train)]
+y_train <- data_train[,1]
+X_test <- data_test[,2:ncol(data_test)]
+y_test <- data_test[,1]
+```
+
+```{r}
+# 12. Perform kNN on the training data, with several values of K, in order to predict mpg1. What test errors do you obtain? Which value of K seems to perform the best on this dataset?
+y_pred <- knn(train = X_train, test = X_test, cl = y_train, k = 10)
+CrossTable(x = y_test, y = y_pred, prop.chisq = FALSE)
+```
+
+TODO: What test errors do you obtain? Which value of K seems to perform the best on this dataset?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

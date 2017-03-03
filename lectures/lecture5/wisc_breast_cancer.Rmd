@@ -7,7 +7,7 @@ output: html_notebook
 
 ```{r}
 wbcd_original <- read.csv("../../data/wisc_bc_data.csv", stringsAsFactors = FALSE)
-str(wbcd)
+str(wbcd_original)
 ```
 
 Remove first column (patientID) since it is irrelevant data
@@ -33,6 +33,7 @@ View summary of data to determine if values must be resacaled
 
 ```{r}
 str(wbcd)
+head(wbcd)
 ```
 
 Features are measured on different scales - i.e., area_mean is measured in the hundreds while smoothness_mean is less than 1
@@ -63,6 +64,7 @@ Note: The first column is skipped because it contains factors (labels)
 
 ```{r}
 wbcd_n <- as.data.frame(lapply(wbcd[2:31], normalize))
+head(wbcd_n)
 ```
 
 We will now split the data set into two sets: a training set and a test set
