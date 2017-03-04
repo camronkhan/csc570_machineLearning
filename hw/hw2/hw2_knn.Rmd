@@ -80,6 +80,7 @@ data_dummy <- dummyVars(" ~ .", data = data_with_categorical)
 data_with_categorical <- data.frame(predict(data_dummy, newdata = data_with_categorical))
 ```
 
+In order to keep things simple to start and to establish a baseline model, I included only the numerical attributes - "mpg1", "weight", "displacement", "cylinders", "horsepower", "acceleration", and "year" - in my training set.  I was also interested, however, to see how origin and manufacturer would affect the performance so I created a second training set for the numerical attributes plus these categorical attributes.  In order to run knn with this second set, I had to (1) extract the manufacturer name (i.e., make) from the name attribute, (2) coerce make and origin to factors, and then create dummy attributes to indicate the presence or abensce of each feature for each observation. 
 
 ```{r}
 # 8. Set the seed of the random number generator to a fixed integer, say 1, so that you can reproduce your work.
