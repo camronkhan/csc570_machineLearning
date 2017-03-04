@@ -1,9 +1,8 @@
----
-title: "HW #2 - K-Nearest Neighbors"
-output: html_notebook
----
+# CSC 570 - Machine Learning
+# HW 2 - k Nearest Neighbors
+# Camron Khan
 
-```{r}
+
 # 0. Clear environment and load dependencies.
 rm(list=ls())
 #install.packages("caret")
@@ -13,31 +12,24 @@ library(caret)
 library(class)
 library(gmodels)
 library(MLmetrics)
-```
 
-```{r}
+
 # 1. Download the dataset Auto.csv.
 data = read.csv("../../data/Auto.csv", stringsAsFactors = FALSE)
-```
 
-```{r}
+
 # 2. Explore the overall structure of the datasetusing str(). Describe it one paragraph.
 str(data)
-```
 
-This dataset consists of 397 observations of 9 variables.  The variables mpg, displacement, and acceleration are numeric (decimal/double).  The variables cylinders, weight, year, and origin are integers.  The variables horsepower and name are character objects (string).  Horsepower and year are noteable variables.  Horsepower is stored as character despite being best stored as integer data.  Year appears to store the last two digits of the full year (i.e., 19XX).
 
-```{r}
 # 3. Convert the attribute horsepower from character to integer.
 data$horsepower <- as.integer(data$horsepower)
-```
 
-```{r}
+
 # 4. The horsepower attribute has some missing values. Remove the observations with missing values, i.e., delete the rows with missing values from the data frame.
 data <- data[!is.na(data$horsepower),]
-```
 
-```{r}
+
 # 5. Explore the data in order to investigate the association between mpg and the other features. Which of the other features seem most likely to be useful in predicting mpg (scatterplots may be useful tools to answer this question). Describe your findings.
 plot(data$cylinders, data$mpg, main = "mpg vs cylinders", xlab = "cylinders", ylab = "mpg")
 plot(data$displacement, data$mpg, main = "mpg vs displacement", xlab = "displacement", ylab = "mpg")
@@ -46,17 +38,12 @@ plot(data$weight, data$mpg, main = "mpg vs weight", xlab = "weight", ylab = "mpg
 plot(data$acceleration, data$mpg, main = "mpg vs acceleration", xlab = "acceleration", ylab = "mpg")
 plot(data$year, data$mpg, main = "mpg vs year", xlab = "year", ylab = "mpg")
 plot(data$origin, data$mpg, main = "mpg vs origin", xlab = "origin", ylab = "mpg")
-```
 
-There is a negative relationship between mpg and cylinders, with the exception where number of cylinders equals 3.  There is a negative relationship between mpg and displacement.  There is a negative relationship between mpg and horsepower.  There is a negative relationship between mpg and weight.  There is not a clearly discernable relationship between mpg and acceleration.  There seems to be a slightly positive relationship between mpg and year.  There seems to be a slightly positive relationship between mpg and origin.  Although, it is not displayed on a plot, it will also be interesting to explore the affect of manufacturer on mpg.
 
-```{r}
 # 6. Create a new attribute mpg1 that contains 1 if mpg is strictly greater than its median, and 0 if mpg is equal or less than its median. 
 data$mpg1 <- sapply(data$mpg, function(x) { if(x > median(data$mpg)) 1 else 0 })
-```
 
-```{r}
-# 6a. Create a new attribute make that stores the car's manufacturer. Fix spelling errors. Store as factor.
+# Create a new attribute make that stores the car's manufacturer. Fix spelling errors. Store as factor.
 data$make <- gsub("([A-Za-z]+).*", "\\1", data$name)
 fixSpelling <- function(x) {
   if (x == "toyouta") { return ("toyota") }
@@ -65,41 +52,33 @@ fixSpelling <- function(x) {
   return (x)
 }
 data$make <- as.factor(sapply(data$make, fixSpelling))
-```
 
-```{r}
+
 # 7. Decide which attributes you are going to use to predict mpg1. Remove all remaining attributes, including mpg.
 data_with_categorical <- subset(data, select = c("mpg1", "weight", "displacement", "cylinders", "horsepower", "acceleration", "year", "make", "origin"))
 data_only_numeric <- subset(data, select = c("mpg1", "weight", "displacement", "cylinders", "horsepower", "acceleration", "year"))
-```
 
-```{r}
-# 7a. Dummy out categorical variables.
+# Dummy out categorical variables.
 data_with_categorical$origin <- as.factor(data_with_categorical$origin)
 data_dummy <- dummyVars(" ~ .", data = data_with_categorical)
 data_with_categorical <- data.frame(predict(data_dummy, newdata = data_with_categorical))
-```
 
 
-```{r}
 # 8. Set the seed of the random number generator to a fixed integer, say 1, so that you can reproduce your work.
 set.seed(1)
-```
 
-```{r}
+
 # 9. Normalize the attribute values.
 normalize <- function(x) { return ((x - min(x)) / (max(x) - min(x))) }
 data_with_categorical_normal <- as.data.frame(lapply(data_with_categorical, normalize))
 data_only_numeric_normal<- as.data.frame(lapply(data_only_numeric, normalize))
-```
 
-```{r}
+
 # 10. Randomize the order of the rows in the dataset.
 data_with_categorical_random <- data_with_categorical_normal[sample(nrow(data_with_categorical_normal)), ]
 data_only_numeric_random <- data_only_numeric_normal[sample(nrow(data_only_numeric_normal)), ]
-```
 
-```{r}
+
 # 11. Split the data into a training set and a test set. Use a test set of 100 rows.
 
 # With categorical
@@ -117,9 +96,8 @@ X_only_numeric_train <- data_only_numeric_train[,2:ncol(data_only_numeric_train)
 y_only_numeric_train <- data_only_numeric_train[,1]
 X_only_numeric_test <- data_only_numeric_test[,2:ncol(data_only_numeric_test)]
 y_only_numeric_test <- data_only_numeric_test[,1]
-```
 
-```{r}
+
 # 12. Perform kNN on the training data, with several values of K, in order to predict mpg1. What test errors do you obtain? Which value of K seems to perform the best on this dataset?
 k_vals <- c(1, 5, 10, 15, 25, 30, 40, 60, 100)
 
@@ -163,6 +141,4 @@ df_knn_only_numeric_performance
 y_pred_best <- knn(train = X_only_numeric_train, test = X_only_numeric_test, cl = y_only_numeric_train, k = 5)
 CrossTable(x = y_only_numeric_test, y = y_pred_best, prop.chisq = FALSE)
 confusionMatrix(data = y_pred_best, reference = y_only_numeric_test, mode = "prec_recall")
-```
 
-The training set with only numerical attributes outperformed the training set with both and categorical attributes for every value of k.  The numerical-only classifier's error total ranged from two to seven errors while the numerical-categorical classifier's error total ranged from eight to fifteen errors.  The best performance was obtained on the numerical-only training set where k=5, which produced one false negative and one false positive.  The accuracy, precision, and recall were at 98% each.  It should be noted that k=1 performed the same as k=5; however, I chose k=5 as the best performer as it would likely underfit the data, and therefore, may result in higher bias.

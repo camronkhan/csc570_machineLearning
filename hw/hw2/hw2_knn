@@ -1,0 +1,16 @@
+# CSC 570 - Machine Learning
+# HW 2 - k Nearest Neighbors
+# Camron Khan
+
+# 2. Explore the overall structure of the datasetusing str(). Describe it one paragraph.
+
+This dataset consists of 397 observations of 9 variables.  The variables mpg, displacement, and acceleration are numeric (decimal/double).  The variables cylinders, weight, year, and origin are integers.  The variables horsepower and name are character objects (string).  Horsepower and year are noteable variables.  Horsepower is stored as character despite being best stored as integer data.  Year appears to store the last two digits of the full year (i.e., 19XX).
+
+# 5. Explore the data in order to investigate the association between mpg and the other features. Which of the other features seem most likely to be useful in predicting mpg (scatterplots may be useful tools to answer this question). Describe your findings.
+
+There is a negative relationship between mpg and cylinders, with the exception where number of cylinders equals 3.  There is a negative relationship between mpg and displacement.  There is a negative relationship between mpg and horsepower.  There is a negative relationship between mpg and weight.  There is not a clearly discernable relationship between mpg and acceleration.  There seems to be a slightly positive relationship between mpg and year.  There seems to be a slightly positive relationship between mpg and origin.  Although, it is not displayed on a plot, it will also be interesting to explore the affect of manufacturer on mpg.
+
+
+# 12. Perform kNN on the training data, with several values of K, in order to predict mpg1. What test errors do you obtain? Which value of K seems to perform the best on this dataset?
+
+The training set with only numerical attributes outperformed the training set with both and categorical attributes for every value of k.  The numerical-only classifier's error total ranged from two to seven errors while the numerical-categorical classifier's error total ranged from eight to fifteen errors.  The best performance was obtained on the numerical-only training set where k=5, which produced one false negative and one false positive.  The accuracy, precision, and recall were at 98% each.  It should be noted that k=1 performed the same as k=5; however, I chose k=5 as the best performer as it would likely underfit the data, and therefore, may result in higher bias.
