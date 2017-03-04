@@ -10,8 +10,9 @@ library(caret)
 library(class)
 install.packages("gmodels")
 library(gmodels)
+install.packages("MLmetrics")
+library(MLmetrics)
 ```
-
 
 ```{r}
 # 1. Download the dataset Auto.csv.
@@ -62,9 +63,23 @@ data$mpg1 <- sapply(data$mpg, function(x) { if(x > median(data$mpg)) 1 else 0 })
 ```
 
 ```{r}
-# 7. Decide which attributes you are going to use to predict mpg1. Remove all remaining attributes, including mpg.
-data_keep <- subset(data, select = c("mpg1", "weight", "displacement", "cylinders", "horsepower"))
+# 6a. Create a new attribute make that stores the car's manufacturer. Fix spelling errors. Store as factor.
+data$make <- gsub("([A-Za-z]+).*", "\\1", data$name)
+data$make <- as.factor(data$make)
 ```
+
+```{r}
+# 7. Decide which attributes you are going to use to predict mpg1. Remove all remaining attributes, including mpg.
+data_with_make <- subset(data, select = c("mpg1", "weight", "displacement", "cylinders", "horsepower", "acceleration", "year", "make"))
+data_without_make <- subset(data, select = c("mpg1", "weight", "displacement", "cylinders", "horsepower", "acceleration", "year"))
+```
+
+```{r}
+# 7a. Dummy make variable.
+data_dummy <- dummyVars(" ~ .", data = data_with_make)
+data_with_make <- data.frame(predict(data_dummy, newdata = data_with_make))
+```
+
 
 ```{r}
 # 8. Set the seed of the random number generator to a fixed integer, say 1, so that you can reproduce your work.
@@ -72,37 +87,83 @@ set.seed(1)
 ```
 
 ```{r}
-# 9. Normalize the attribute values
+# 9. Normalize the attribute values.
 normalize <- function(x) { return ((x - min(x)) / (max(x) - min(x))) }
-data_normal <- as.data.frame(lapply(data_keep, normalize))
+data_with_make_normal <- as.data.frame(lapply(data_with_make, normalize))
+data_without_make_normal<- as.data.frame(lapply(data_without_make, normalize))
 ```
 
 ```{r}
-# 10. Randomize the order of the rows in the dataset   df1[sample(nrow(df1)),]
-data_random <- data_normal[sample(nrow(data_normal)), ]
+# 10. Randomize the order of the rows in the dataset.
+data_with_make_random <- data_with_make_normal[sample(nrow(data_with_make_normal)), ]
+data_without_make_random <- data_without_make_normal[sample(nrow(data_without_make_normal)), ]
 ```
 
 ```{r}
 # 11. Split the data into a training set and a test set. Use a test set of 100 rows.
-data_train <- data_random[1:(nrow(data_random)-100), ]
-data_test <- data_random[(nrow(data_random)-99):nrow(data_random), ]
-X_train <- data_train[,2:ncol(data_train)]
-y_train <- data_train[,1]
-X_test <- data_test[,2:ncol(data_test)]
-y_test <- data_test[,1]
+
+# With make
+data_with_make_train <- data_with_make_random[1:(nrow(data_with_make_random)-100), ]
+data_with_make_test <- data_with_make_random[(nrow(data_with_make_random)-99):nrow(data_with_make_random), ]
+X_with_make_train <- data_with_make_train[,2:ncol(data_with_make_train)]
+y_with_make_train <- data_with_make_train[,1]
+X_with_make_test <- data_with_make_test[,2:ncol(data_with_make_test)]
+y_with_make_test <- data_with_make_test[,1]
+
+# Without make
+data_without_make_train <- data_without_make_random[1:(nrow(data_without_make_random)-100), ]
+data_without_make_test <- data_without_make_random[(nrow(data_without_make_random)-99):nrow(data_without_make_random), ]
+X_without_make_train <- data_without_make_train[,2:ncol(data_without_make_train)]
+y_without_make_train <- data_without_make_train[,1]
+X_without_make_test <- data_without_make_test[,2:ncol(data_without_make_test)]
+y_without_make_test <- data_without_make_test[,1]
 ```
 
 ```{r}
 # 12. Perform kNN on the training data, with several values of K, in order to predict mpg1. What test errors do you obtain? Which value of K seems to perform the best on this dataset?
-y_pred <- knn(train = X_train, test = X_test, cl = y_train, k = 10)
-CrossTable(x = y_test, y = y_pred, prop.chisq = FALSE)
+
+k_vals <- c(1, 5, 10, 15, 25, 30, 40, 60, 100)
+
+# With make
+evaluate_with_make_performance <- function(x) {
+  y_with_make_pred <- knn(train = X_with_make_train, test = X_with_make_test, cl = y_with_make_train, k = x)
+  y_with_make_CM <- confusionMatrix(data = y_with_make_pred, reference = y_with_make_test, mode = "prec_recall")
+  y_with_make_accuracy <- y_with_make_CM$overall[['Accuracy']]
+  y_with_make_recall <- y_with_make_CM$byClass[['Recall']]
+  y_with_make_precision <- y_with_make_CM$byClass[['Precision']]
+  return (c(as.integer(x), y_with_make_accuracy, y_with_make_recall, y_with_make_precision))
+}
+knn_with_make_performance <- sapply(k_vals, evaluate_with_make_performance)
+df_knn_with_make_performance <- as.data.frame(t(knn_with_make_performance))
+colnames(df_knn_with_make_performance) <- c("k", "Accuracy", "Recall", "Precision")
+attr(df_knn_with_make_performance, "title") <- "Performance of kNN on Dataset Including 'Make' Attribute"
+df_knn_with_make_performance
+
+# Without make
+evaluate_without_make_performance <- function(x) {
+  y_without_make_pred <- knn(train = X_without_make_train, test = X_without_make_test, cl = y_without_make_train, k = x)
+  y_without_make_CM <- confusionMatrix(data = y_without_make_pred, reference = y_without_make_test, mode = "prec_recall")
+  y_without_make_accuracy <- y_without_make_CM$overall[['Accuracy']]
+  y_without_make_recall <- y_without_make_CM$byClass[['Recall']]
+  y_without_make_precision <- y_without_make_CM$byClass[['Precision']]
+  return (c(as.integer(x), y_without_make_accuracy, y_without_make_recall, y_without_make_precision))
+}
+knn_without_make_performance <- sapply(k_vals, evaluate_without_make_performance)
+df_knn_without_make_performance <- as.data.frame(t(knn_without_make_performance))
+colnames(df_knn_without_make_performance) <- c("k", "Accuracy", "Recall", "Precision")
+attr(df_knn_without_make_performance, "title") <- "Performance of kNN on Dataset Excluding 'Make' Attribute"
+df_knn_without_make_performance
 ```
 
 TODO: What test errors do you obtain? Which value of K seems to perform the best on this dataset?
 
 
-
-
+```{r}
+# Best model
+y_pred_best <- knn(train = X_without_make_train, test = X_without_make_test, cl = y_without_make_train, k = 5)
+CrossTable(x = y_without_make_test, y = y_pred_best, prop.chisq = FALSE)
+confusionMatrix(data = y_pred_best, reference = y_without_make_test, mode = "prec_recall")
+```
 
 
 
