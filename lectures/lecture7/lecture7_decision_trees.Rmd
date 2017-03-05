@@ -1,16 +1,113 @@
 ---
-title: "R Notebook"
+title: "Lecture 7 - Decision Trees"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
-
 ```{r}
-plot(cars)
+credit <- read.csv("../../data/credit.csv")
+str(credit)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+```{r}
+table(credit$checking_balance)
+```
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+```{r}
+table(credit$savings_balance)
+```
+
+```{r}
+summary(credit$months_loan_duration)
+```
+
+```{r}
+summary(credit$amount)
+```
+
+```{r}
+table(credit$default)
+```
+
+```{r}
+set.seed(123)
+train_sample <- sample(1000, 900)
+str(train_sample)
+```
+
+```{r}
+credit_train <- credit[train_sample, ]
+credit_test <- credit[-train_sample, ]
+```
+
+```{r}
+prop.table(table(credit_train$default))
+```
+
+```{r}
+prop.table(table(credit_test$default))
+```
+
+```{r}
+#install.packages("C50")
+#library(C50)
+```
+
+```{r}
+#?C5.0Control
+```
+
+```{r}
+credit_model <- C5.0(credit_train[-17], credit_train$default)
+credit_model
+```
+
+```{r}
+summary(credit_model)
+```
+
+```{r}
+credit_pred <- predict(credit_model, credit_test)
+```
+
+```{r}
+#library(gmodels)
+```
+
+```{r}
+CrossTable(credit_test$default, credit_pred, prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE, dnn = c('actual default', 'predicted default'))
+```
+
+```{r}
+credit_boost10 <- C5.0(credit_train[-17], credit_train$default, trials = 10)
+credit_boost10
+```
+
+```{r}
+summary(credit_boost10)
+```
+
+```{r}
+credit_boost_pred10 <- predict(credit_boost10, credit_test)
+CrossTable(credit_test$default, credit_boost_pred10, prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE, dnn = c('acutal default', 'predicted default'))
+```
+
+```{r}
+matrix_dimensions <- list(c("no", "yes"), c("no", "yes"))
+names(matrix_dimensions) <- c("predicted", "actual")
+matrix_dimensions
+```
+
+```{r}
+error_cost <- matrix(c(0, 1, 4, 0), nrow = 2, dimnames = matrix_dimensions)
+error_cost
+```
+
+```{r}
+credit_cost <- C5.0(credit_train[-17], credit_train$default, costs = error_cost)
+credit_cost_pred <- predict(credit_cost, credit_test)
+CrossTable(credit_test$default, credit_cost_pred, prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE, dnn = c('actual default', 'predicted default'))
+```
+
+
+
+
