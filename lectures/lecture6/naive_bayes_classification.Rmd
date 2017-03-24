@@ -192,7 +192,7 @@ labels, sms_train_labels:
 
 ```{r}
 sms_classifier <- naiveBayes(sms_train, sms_train_labels)
-```
+```p
 
 Then, we use the model to make predictions on the test data and save the vector of
 labels in sms_test_pred:
