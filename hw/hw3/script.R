@@ -9,11 +9,13 @@
 #install.packages("SnowballC")
 #install.packages("wordcloud")
 #install.packages("e1071")
+#install.packages("gmodels")
 
 library(tm)
 library(SnowballC)
 library(wordcloud)
 library(e1071)
+library(gmodels)
 
 train_ham_dir <- "./data.gi/train/ham/"
 train_spam_dir <- "./data.gi/train/spam/"
@@ -88,7 +90,7 @@ test_dtdf <- as.data.frame(cbind(test_df, as.data.frame(as.matrix(test_dtm_freq)
 
 #===========================================================================================================================================
 
-# WORD CLOUDS
+# WORD CLOUDS FOR TRAIN HAM AND SPAM
 
 colorPalette <- brewer.pal(8, "Dark2")
 
@@ -106,5 +108,23 @@ png("train_spam_wc.png", width=1280, height=800)
 wordcloud(words = train_spam_terms_freqs$word, freq = train_spam_terms_freqs$freq, max.words = 50, min.freq = 2, rot.per = 0.15, scale = c(3, 0.5), random.order = FALSE, colors = colorPalette)
 dev.off()
 
+#===========================================================================================================================================
+
+# CONVERT FEATURE COUNTS TO CATEGORICALS
+
+convert_counts <- function(x) { x <- ifelse(x > 0, "Yes", "No") }
+
+train <- apply(train_dtdf[,4:ncol(train_dtdf)], MARGIN = 2, convert_counts)
+test <- apply(test_dtdf[,4:ncol(test_dtdf)], MARGIN = 2, convert_counts)
+
+#===========================================================================================================================================
+
+# TRAIN, PREDICT, EVALUATE
+
+clf <- naiveBayes(train, train_labels)
+
+pred <- predict(clf, test)
+
+CrossTable(pred, test_labels, prop.chisq = FALSE, prop.t = FALSE, dnn = c('predicted', 'actual'))
 
 
