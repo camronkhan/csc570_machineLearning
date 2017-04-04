@@ -8,14 +8,14 @@
 #install.packages("tm")
 #install.packages("SnowballC")
 #install.packages("wordcloud")
-#install.packages("RColorBrewer")
 #install.packages("e1071")
+#install.packages("gmodels")
 
 library(tm)
 library(SnowballC)
 library(wordcloud)
-library(RColorBrewer)
 library(e1071)
+library(gmodels)
 
 train_ham_dir <- "./data.gi/train/ham/"
 train_spam_dir <- "./data.gi/train/spam/"
@@ -29,67 +29,102 @@ test_spam_corpus <- SimpleCorpus(DirSource(directory = test_spam_dir, encoding =
 
 #===========================================================================================================================================
 
+# PARSE CORPUS TO DF AND COMBINE SPAM AND HAM
+
+parseCorpusToDataFrame <- function(corpus, type) {
+  name <- as.vector(names(corpus))
+  text <- unlist(corpus, use.names = FALSE)
+  text <- as.vector(text[1:length(text)-1])
+  type <- sapply(name, function(x) type)
+  as.data.frame(cbind(name, text, type), stringsAsFactors = FALSE)
+}
+
+train_ham_df <- parseCorpusToDataFrame(train_ham_corpus, "ham")
+train_spam_df <- parseCorpusToDataFrame(train_spam_corpus, "spam")
+train_df <- rbind(train_ham_df, train_spam_df)
+train_df$type <- as.factor(train_df$type)
+
+test_ham_df <- parseCorpusToDataFrame(test_ham_corpus, "ham")
+test_spam_df <- parseCorpusToDataFrame(test_spam_corpus, "spam")
+test_df <- rbind(test_ham_df, test_spam_df)
+test_df$type <- as.factor(test_df$type)
+
+#===========================================================================================================================================
+
+# GET TRAIN AND TEST LABELS
+
+train_labels <- train_df$type
+test_labels <- test_df$type
+
+#===========================================================================================================================================
+
+# PARSE COMBINED DF BACK TO CORPUS
+
+train_corpus <- SimpleCorpus(VectorSource(train_df$text))
+test_corpus <- SimpleCorpus(VectorSource(test_df$text))
+
+#===========================================================================================================================================
+
 # CLEAN TEXT AND PARSE TO DTM
 
 customStopWords <- c(stopwords("english"), "to", "cc", "bcc", "subject", "re", "from", "can", "will")
-train_ham_dtm <- DocumentTermMatrix(train_ham_corpus, control = list(tolower = TRUE, removeNumbers = TRUE, removePunctuation = TRUE, stopwords = customStopWords, stemming = TRUE))
-train_spam_dtm <- DocumentTermMatrix(train_spam_corpus, control = list(tolower = TRUE, removeNumbers = TRUE, removePunctuation = TRUE, stopwords = customStopWords, stemming = TRUE))
-test_ham_dtm <- DocumentTermMatrix(test_ham_corpus, control = list(tolower = TRUE, removeNumbers = TRUE, removePunctuation = TRUE, stopwords = customStopWords, stemming = TRUE))
-test_spam_dtm <- DocumentTermMatrix(test_spam_corpus, control = list(tolower = TRUE, removeNumbers = TRUE, removePunctuation = TRUE, stopwords = customStopWords, stemming = TRUE))
+train_dtm <- DocumentTermMatrix(train_corpus, control = list(tolower = TRUE, removeNumbers = TRUE, removePunctuation = TRUE, stopwords = customStopWords, stemming = TRUE))
+test_dtm <- DocumentTermMatrix(test_corpus, control = list(tolower = TRUE, removeNumbers = TRUE, removePunctuation = TRUE, stopwords = customStopWords, stemming = TRUE))
 
 #===========================================================================================================================================
 
-# GET HAM / SPAM LABELS
+# EXCLUDE WORDS WHERE FREQ < 5
 
-train_ham_labels <- lapply(vector(mode = "character", length = train_ham_dtm$nrow), function(x) { "ham" })
-train_spam_labels <- lapply(vector(mode = "character", length = train_spam_dtm$nrow), function(x) { "spam" })
-test_ham_labels <- lapply(vector(mode = "character", length = test_ham_dtm$nrow), function(x) { "ham" })
-test_spam_labels <- lapply(vector(mode = "character", length = test_spam_dtm$nrow), function(x) { "spam" })
+train_terms_gt_freq_min <- findFreqTerms(train_dtm, 5)
+test_terms_gt_freq_min <- findFreqTerms(test_dtm, 5)
 
-#===========================================================================================================================================
-
-# CONVERT DTM TO DOCUMENT TERM DATAFRAME WITH LABELS
-
-train_ham_matrix <- as.matrix(train_ham_dtm)
-train_ham_dtdf <- as.data.frame(train_ham_matrix)
-train_ham_dtdf$OUTCOME <- train_ham_labels
-
-train_spam_matrix <- as.matrix(train_spam_dtm)
-train_spam_dtdf <- as.data.frame(train_spam_matrix)
-train_spam_dtdf$OUTCOME <- train_spam_labels
-
-test_ham_matrix <- as.matrix(test_ham_dtm)
-test_ham_dtdf <- as.data.frame(test_ham_matrix)
-test_ham_dtdf$OUTCOME <- test_ham_labels
-
-test_spam_matrix <- as.matrix(test_spam_dtm)
-test_spam_dtdf <- as.data.frame(test_spam_matrix)
-test_spam_dtdf$OUTCOME <- test_spam_labels
+train_dtm_freq <- train_dtm[,train_terms_gt_freq_min]
+test_dtm_freq <- test_dtm[,test_terms_gt_freq_min]
 
 #===========================================================================================================================================
 
-# WORD CLOUDS
+# CONVERT DTM TO DOCUMENT TERM DATAFRAME WITH FILENAMES AND LABELS
+
+train_dtdf <- as.data.frame(cbind(train_df, as.data.frame(as.matrix(train_dtm_freq))))
+test_dtdf <- as.data.frame(cbind(test_df, as.data.frame(as.matrix(test_dtm_freq))))
+
+#===========================================================================================================================================
+
+# WORD CLOUDS FOR TRAIN HAM AND SPAM
 
 colorPalette <- brewer.pal(8, "Dark2")
 
-train_ham_matrix <- as.matrix(train_ham_dtm)
-
-train_ham_dtdf <- as.data.frame(train_ham_matrix)
-
-train_ham_freqs <- sort(colSums(train_ham_matrix), decreasing = TRUE)
-train_ham_words <- names(train_ham_freqs)
-train_ham_df <- data.frame(word = train_ham_words, freq = train_ham_freqs)
-png("train_ham_wc.png", width=1280,height=800)
-wordcloud(words = train_ham_df$word, freq = train_ham_df$freq, max.words = 50, min.freq = 2, rot.per = 0.15, scale = c(3, 0.5), random.order = FALSE, colors = colorPalette)
+train_ham_freqs <- colSums(subset(train_dtdf, type == "ham")[,4:ncol(train_dtdf)])
+train_ham_terms <- names(train_ham_freqs)
+train_ham_terms_freqs <- data.frame(word = train_ham_terms, freq = train_ham_freqs)
+png("train_ham_wc.png", width=1280, height=800)
+wordcloud(words = train_ham_terms_freqs$word, freq = train_ham_terms_freqs$freq, max.words = 50, min.freq = 2, rot.per = 0.15, scale = c(3, 0.5), random.order = FALSE, colors = colorPalette)
 dev.off()
 
-train_spam_matrix <- as.matrix(train_spam_dtm)
-train_spam_freqs <- sort(colSums(train_spam_matrix), decreasing = TRUE)
-train_spam_words <- names(train_spam_freqs)
-train_spam_df <- data.frame(word = train_spam_words, freq = train_spam_freqs)
-png("train_spam_wc.png", width=1280,height=800)
-wordcloud(words = train_spam_df$word, freq = train_spam_df$freq, max.words = 50, min.freq = 2, rot.per = 0.15, scale = c(3, 0.5), random.order = FALSE, colors = colorPalette)
+train_spam_freqs <- colSums(subset(train_dtdf, type == "spam")[,4:ncol(train_dtdf)])
+train_spam_terms <- names(train_spam_freqs)
+train_spam_terms_freqs <- data.frame(word = train_spam_terms, freq = train_spam_freqs)
+png("train_spam_wc.png", width=1280, height=800)
+wordcloud(words = train_spam_terms_freqs$word, freq = train_spam_terms_freqs$freq, max.words = 50, min.freq = 2, rot.per = 0.15, scale = c(3, 0.5), random.order = FALSE, colors = colorPalette)
 dev.off()
 
+#===========================================================================================================================================
+
+# CONVERT FEATURE COUNTS TO CATEGORICALS
+
+convert_counts <- function(x) { x <- ifelse(x > 0, "Yes", "No") }
+
+train <- apply(train_dtdf[,4:ncol(train_dtdf)], MARGIN = 2, convert_counts)
+test <- apply(test_dtdf[,4:ncol(test_dtdf)], MARGIN = 2, convert_counts)
+
+#===========================================================================================================================================
+
+# TRAIN, PREDICT, EVALUATE
+
+clf <- naiveBayes(train, train_labels)
+
+pred <- predict(clf, test)
+
+CrossTable(pred, test_labels, prop.chisq = FALSE, prop.t = FALSE, dnn = c('predicted', 'actual'))
 
 
