@@ -36,3 +36,8 @@ black:    real    1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town
 lstat:    real    lower status of the population (percent)
 medv:     real    median value of owner-occupied homes in \$1000s     DEPENDENT VARIABLE
 
+### Summarize Data
+```{r}
+str(DATA)
+```
+
