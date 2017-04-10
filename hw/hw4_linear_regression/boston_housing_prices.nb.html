@@ -172,30 +172,126 @@ $(document).ready(function () {
 
 
 <!-- rnb-text-begin -->
-<div id="dependencies" class="section level1">
-<h1>Dependencies</h1>
+<p>Camron Khan<br> April 2017</p>
+<div id="dependencies" class="section level2">
+<h2>Dependencies</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI2luc3RhbGwucGFja2FnZXMoXCJjYXJldFwiKVxuI2luc3RhbGwucGFja2FnZXMoXCJBcHBsaWVkUHJlZGljdGl2ZU1vZGVsaW5nXCIpXG5cbmxpYnJhcnkoY2FyZXQpXG5saWJyYXJ5KEFwcGxpZWRQcmVkaWN0aXZlTW9kZWxpbmcpXG5gYGAifQ== -->
+<pre class="r"><code>#install.packages(&quot;caret&quot;)
+#install.packages(&quot;AppliedPredictiveModeling&quot;)
+
+library(caret)
+library(AppliedPredictiveModeling)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="data-source" class="section level2">
+<h2>Data Source</h2>
+<pre class="r"><code>DATA &lt;- read.csv('./Boston.csv', stringsAsFactors = FALSE)</code></pre>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
-<div id="import-data" class="section level1">
-<h1>Import Data</h1>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
+<div id="definitions" class="section level2">
+<h2>Definitions</h2>
+<table>
+<colgroup>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="80%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Type</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>X</td>
+<td>int</td>
+<td>index</td>
+</tr>
+<tr class="even">
+<td>crim</td>
+<td>real</td>
+<td>per capita crime rate by town</td>
+</tr>
+<tr class="odd">
+<td>zn</td>
+<td>real</td>
+<td>proportion of residential land zoned for lots over 25,000 sq.ft</td>
+</tr>
+<tr class="even">
+<td>indus</td>
+<td>real</td>
+<td>proportion of non-retail business acres per town</td>
+</tr>
+<tr class="odd">
+<td>chas</td>
+<td>int</td>
+<td>Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)</td>
+</tr>
+<tr class="even">
+<td>nox</td>
+<td>real</td>
+<td>nitrogen oxides concentration (parts per 10 million)</td>
+</tr>
+<tr class="odd">
+<td>rm</td>
+<td>real</td>
+<td>average number of rooms per dwelling</td>
+</tr>
+<tr class="even">
+<td>age</td>
+<td>real</td>
+<td>proportion of owner-occupied units built prior to 1940</td>
+</tr>
+<tr class="odd">
+<td>dis</td>
+<td>real</td>
+<td>weighted mean of distances to five Boston employment centers</td>
+</tr>
+<tr class="even">
+<td>rad</td>
+<td>int</td>
+<td>index of accessibility to radial highways</td>
+</tr>
+<tr class="odd">
+<td>tax</td>
+<td>int</td>
+<td>full-value property-tax rate per $10,000</td>
+</tr>
+<tr class="even">
+<td>ptratio</td>
+<td>real</td>
+<td>pupil-teacher ratio by town</td>
+</tr>
+<tr class="odd">
+<td>black</td>
+<td>real</td>
+<td>1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town</td>
+</tr>
+<tr class="even">
+<td>lstat</td>
+<td>real</td>
+<td>lower status of the population (percent)</td>
+</tr>
+<tr class="odd">
+<td>medv</td>
+<td>real</td>
+<td>median value of owner-occupied homes in $1000s (<strong>Dependent Variable</strong>)</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="definitions" class="section level1">
-<h1>Definitions</h1>
-<ol style="list-style-type: decimal">
-<li>X int index</li>
-<li>crim: real per capita crime rate by town</li>
-<li>zn: real proportion of residential land zoned for lots over 25,000 sq.ft</li>
-<li>indus: real proportion of non-retail business acres per town chas: int Charles River dummy variable (= 1 if tract bounds river; 0 otherwise) nox: real nitrogen oxides concentration (parts per 10 million) rm: real average number of rooms per dwelling age: real proportion of owner-occupied units built prior to 1940 dis: real weighted mean of distances to five Boston employment centers rad: int index of accessibility to radial highways tax: int full-value property-tax rate per $10,000 ptratio: real pupil-teacher ratio by town black: real 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town lstat: real lower status of the population (percent) medv: real median value of owner-occupied homes in $1000s DEPENDENT VARIABLE</li>
-</ol>
-<div id="summarize-data" class="section level3">
-<h3>Summarize Data</h3>
+<div id="data-summary" class="section level2">
+<h2>Data Summary</h2>
+<p>like this</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3RyKERBVEEpXG5cbmBgYCJ9 -->
@@ -224,9 +320,8 @@ $(document).ready(function () {
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 </div>
-</div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIkJvc3RvbiBIb3VzaW5nIFByaWNlcyINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCiMgRGVwZW5kZW5jaWVzDQoNCmBgYHtyfQ0KI2luc3RhbGwucGFja2FnZXMoImNhcmV0IikNCiNpbnN0YWxsLnBhY2thZ2VzKCJBcHBsaWVkUHJlZGljdGl2ZU1vZGVsaW5nIikNCg0KbGlicmFyeShjYXJldCkNCmxpYnJhcnkoQXBwbGllZFByZWRpY3RpdmVNb2RlbGluZykNCmBgYA0KDQojIEltcG9ydCBEYXRhDQoNCmBgYHtyfQ0KREFUQSA8LSByZWFkLmNzdignLi9Cb3N0b24uY3N2Jywgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFKQ0KYGBgDQoNCiMgRGVmaW5pdGlvbnMNCjEuIFggICAgICAgICBpbnQgICAgIGluZGV4DQoyLiBjcmltOiAgICAgcmVhbCAgICBwZXIgY2FwaXRhIGNyaW1lIHJhdGUgYnkgdG93bg0KMy4gem46ICAgICAgIHJlYWwgICAgcHJvcG9ydGlvbiBvZiByZXNpZGVudGlhbCBsYW5kIHpvbmVkIGZvciBsb3RzIG92ZXIgMjUsMDAwIHNxLmZ0DQo0LiBpbmR1czogICAgcmVhbCAgICBwcm9wb3J0aW9uIG9mIG5vbi1yZXRhaWwgYnVzaW5lc3MgYWNyZXMgcGVyIHRvd24NCmNoYXM6ICAgICBpbnQgICAgIENoYXJsZXMgUml2ZXIgZHVtbXkgdmFyaWFibGUgKD0gMSBpZiB0cmFjdCBib3VuZHMgcml2ZXI7IDAgb3RoZXJ3aXNlKQ0Kbm94OiAgICAgIHJlYWwgICAgbml0cm9nZW4gb3hpZGVzIGNvbmNlbnRyYXRpb24gKHBhcnRzIHBlciAxMCBtaWxsaW9uKQ0Kcm06ICAgICAgIHJlYWwgICAgYXZlcmFnZSBudW1iZXIgb2Ygcm9vbXMgcGVyIGR3ZWxsaW5nDQphZ2U6ICAgICAgcmVhbCAgICBwcm9wb3J0aW9uIG9mIG93bmVyLW9jY3VwaWVkIHVuaXRzIGJ1aWx0IHByaW9yIHRvIDE5NDANCmRpczogICAgICByZWFsICAgIHdlaWdodGVkIG1lYW4gb2YgZGlzdGFuY2VzIHRvIGZpdmUgQm9zdG9uIGVtcGxveW1lbnQgY2VudGVycw0KcmFkOiAgICAgIGludCAgICAgaW5kZXggb2YgYWNjZXNzaWJpbGl0eSB0byByYWRpYWwgaGlnaHdheXMNCnRheDogICAgICBpbnQgICAgIGZ1bGwtdmFsdWUgcHJvcGVydHktdGF4IHJhdGUgcGVyIFwkMTAsMDAwDQpwdHJhdGlvOiAgcmVhbCAgICBwdXBpbC10ZWFjaGVyIHJhdGlvIGJ5IHRvd24NCmJsYWNrOiAgICByZWFsICAgIDEwMDAoQmsgLSAwLjYzKV4yIHdoZXJlIEJrIGlzIHRoZSBwcm9wb3J0aW9uIG9mIGJsYWNrcyBieSB0b3duDQpsc3RhdDogICAgcmVhbCAgICBsb3dlciBzdGF0dXMgb2YgdGhlIHBvcHVsYXRpb24gKHBlcmNlbnQpDQptZWR2OiAgICAgcmVhbCAgICBtZWRpYW4gdmFsdWUgb2Ygb3duZXItb2NjdXBpZWQgaG9tZXMgaW4gXCQxMDAwcyAgICAgREVQRU5ERU5UIFZBUklBQkxFDQoNCiMjIyBTdW1tYXJpemUgRGF0YQ0KYGBge3J9DQpzdHIoREFUQSkNCmBgYA0KDQo=</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIkJvc3RvbiBIb3VzaW5nIFByaWNlcyINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCkNhbXJvbiBLaGFuPGJyPg0KQXByaWwgMjAxNw0KDQojIyBEZXBlbmRlbmNpZXMNCmBgYHtyfQ0KI2luc3RhbGwucGFja2FnZXMoImNhcmV0IikNCiNpbnN0YWxsLnBhY2thZ2VzKCJBcHBsaWVkUHJlZGljdGl2ZU1vZGVsaW5nIikNCg0KbGlicmFyeShjYXJldCkNCmxpYnJhcnkoQXBwbGllZFByZWRpY3RpdmVNb2RlbGluZykNCmBgYA0KDQojIyBEYXRhIFNvdXJjZQ0KYGBgcg0KREFUQSA8LSByZWFkLmNzdignLi9Cb3N0b24uY3N2Jywgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFKQ0KYGBgDQpgYGB7cn0NCkRBVEEgPC0gcmVhZC5jc3YoJy4vQm9zdG9uLmNzdicsIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRSkNCmBgYA0KDQojIyBEZWZpbml0aW9ucw0KDQp8Q29sdW1uICAgfFR5cGUgICB8RGVmaW5pdGlvbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwNCnwtLS0tLS0tLS18LS0tLS0tLXwtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tfA0KfFggICAgICAgIHxpbnQgICAgfGluZGV4ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8DQp8Y3JpbSAgICAgfHJlYWwgICB8cGVyIGNhcGl0YSBjcmltZSByYXRlIGJ5IHRvd24gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwNCnx6biAgICAgICB8cmVhbCAgIHxwcm9wb3J0aW9uIG9mIHJlc2lkZW50aWFsIGxhbmQgem9uZWQgZm9yIGxvdHMgb3ZlciAyNSwwMDAgc3EuZnQgICAgICAgICAgfA0KfGluZHVzICAgIHxyZWFsICAgfHByb3BvcnRpb24gb2Ygbm9uLXJldGFpbCBidXNpbmVzcyBhY3JlcyBwZXIgdG93biAgICAgICAgICAgICAgICAgICAgICAgICB8DQp8Y2hhcyAgICAgfGludCAgICB8Q2hhcmxlcyBSaXZlciBkdW1teSB2YXJpYWJsZSAoPSAxIGlmIHRyYWN0IGJvdW5kcyByaXZlcjsgMCBvdGhlcndpc2UpICAgIHwNCnxub3ggICAgICB8cmVhbCAgIHxuaXRyb2dlbiBveGlkZXMgY29uY2VudHJhdGlvbiAocGFydHMgcGVyIDEwIG1pbGxpb24pICAgICAgICAgICAgICAgICAgICAgfA0KfHJtICAgICAgIHxyZWFsICAgfGF2ZXJhZ2UgbnVtYmVyIG9mIHJvb21zIHBlciBkd2VsbGluZyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8DQp8YWdlICAgICAgfHJlYWwgICB8cHJvcG9ydGlvbiBvZiBvd25lci1vY2N1cGllZCB1bml0cyBidWlsdCBwcmlvciB0byAxOTQwICAgICAgICAgICAgICAgICAgIHwNCnxkaXMgICAgICB8cmVhbCAgIHx3ZWlnaHRlZCBtZWFuIG9mIGRpc3RhbmNlcyB0byBmaXZlIEJvc3RvbiBlbXBsb3ltZW50IGNlbnRlcnMgICAgICAgICAgICAgfA0KfHJhZCAgICAgIHxpbnQgICAgfGluZGV4IG9mIGFjY2Vzc2liaWxpdHkgdG8gcmFkaWFsIGhpZ2h3YXlzICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8DQp8dGF4ICAgICAgfGludCAgICB8ZnVsbC12YWx1ZSBwcm9wZXJ0eS10YXggcmF0ZSBwZXIgXCQxMCwwMDAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwNCnxwdHJhdGlvICB8cmVhbCAgIHxwdXBpbC10ZWFjaGVyIHJhdGlvIGJ5IHRvd24gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfA0KfGJsYWNrICAgIHxyZWFsICAgfDEwMDAoQmsgLSAwLjYzKV4yIHdoZXJlIEJrIGlzIHRoZSBwcm9wb3J0aW9uIG9mIGJsYWNrcyBieSB0b3duICAgICAgICAgICB8DQp8bHN0YXQgICAgfHJlYWwgICB8bG93ZXIgc3RhdHVzIG9mIHRoZSBwb3B1bGF0aW9uIChwZXJjZW50KSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwNCnxtZWR2ICAgICB8cmVhbCAgIHxtZWRpYW4gdmFsdWUgb2Ygb3duZXItb2NjdXBpZWQgaG9tZXMgaW4gXCQxMDAwcyAoKipEZXBlbmRlbnQgVmFyaWFibGUqKikgfA0KDQojIyBEYXRhIFN1bW1hcnkNCmxpa2UgdGhpcw0KYGBge3J9DQpzdHIoREFUQSkNCmBgYA0KDQo=</div>
 
 
 
