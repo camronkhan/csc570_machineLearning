@@ -9,18 +9,21 @@ April 2017
 ## Dependencies
 ```{r}
 #install.packages("caret")
+#install.packages("ggplot2")
 #install.packages("AppliedPredictiveModeling")
 
 library(caret)
+library(ggplot2)
+library(reshape2)
 library(AppliedPredictiveModeling)
 ```
 
 ## Data Source
 ```r
-DATA <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
+rawData <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
 ```
 ```{r}
-DATA <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
+rawData <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
 ```
 
 ## Definitions
@@ -46,6 +49,44 @@ DATA <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
 ## Data Summary
 like this
 ```{r}
-str(DATA)
+str(rawData)
 ```
+
+
+```{r}
+#ggplot(melt(DATA), aes(x=value)) + geom_histogram() + facet_wrap(~variable)
+
+qplot(rawData$rm, geom = 'histogram', binwidth = .1) + xlab('')
+qplot(rawData$crim, geom = 'histogram', binwidth = 1) + xlab('')
+
+```
+
+
+
+
+
+```{r}
+preprocessor = preProcess(rawData[2:15], c("BoxCox", "center", "scale"))
+preprocessedData = data.frame(predict(preprocessor, rawData[2:15]))
+```
+
+
+
+
+```{r}
+cor(rawData[,2:15])
+```
+
+
+```{r}
+cor(preprocessedData)
+```
+
+
+
+```{r, fig.width=15, fig.height=10}
+ggplot(melt(preprocessedData), aes(x=value)) + geom_histogram(binwidth = .5) + facet_wrap(~variable)
+```
+
+
 
