@@ -5,12 +5,12 @@
 
 # IMPORTS
 
-#install.packages("tm")
-#install.packages("SnowballC")
-#install.packages("wordcloud")
-#install.packages("e1071")
-#install.packages("gmodels")
-#install.packages("caret")
+install.packages("tm")
+install.packages("SnowballC")
+install.packages("wordcloud")
+install.packages("e1071")
+install.packages("gmodels")
+install.packages("caret")
 
 library(tm)
 library(SnowballC)

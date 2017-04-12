@@ -1,0 +1,41 @@
+HW 3 - Naive Bayes Classification
+Camron Khan
+
+a.) Steps of your work
+
+  1. Imported the spam and ham doc into corpora
+  2. Converted the corpora into data frames to add spam/ham labels and then bind the spam and ham documents
+     together so that they would be processed into document term matrices together
+  3. Extracted labels for later training/evaluation
+  4. Parsed DF's back to corpora
+  5. Created list of stop words, which included standard English stopwords along with email-related stopword being careful
+     not to extract too many words as some might be indicative of spam
+  6. Cleaned doc text and parsed corpora to document term matrices
+  7. The matrices were very sparse so terms whose frequency was less than 5 were excluded
+  8. Parsed DTM's to document term data frames and created word clouds
+  9. Converted numeric counts to categoricals (i.e., Yes/No) as the Naive Bayes classifier works better with categorical data
+  10. Trained and evaluated model
+
+b.) Comparison between spam and ham word clouds
+
+  I noticed that the spam word cloud had terms with a much higher frequency than did the ham word clouds. This indicates that
+  spam tends to focus on certain popular topics. In this case, the spam seemed to center around persuading recipients to
+  purchase software and/or other business and computer related products or services. The ham was much more diverse in its terms,
+  and as a result, its term frequencies were lower. There was some common discussion, however, related to Enron (located in
+  Houston) along with discussion about deals, gas, and meters.  It may be possible that these emails are from Enron employees,
+  government officials investigating Enron, fromm the period shortly after when the Enron scandal broke in the news - thus,
+  making it more likely that the average person might be sending and receiving emails related to the topic.
+  
+c.) Evaluation of the performance of your classifer
+
+  The classifier did a very good job of labeling ham as ham (even if some spam was labeled as ham), which is indicated by a
+  recall score of 0.9969. It's important for a email filter to have a high recall because people are much more willing to
+  have a few spam emails slip into their inbox but find it unacceptable for ham to be placed into their spam folder as they
+  would likely miss important messages.  The classifier also had a respecable precision score of 0.9282, which means it was
+  also successfully at identifying only ham as ham.  The recall and precision scores can be understood more clearly if we
+  look at the false negative and false positive counts.  There was only one false negative in which a real email was
+  misidentified as spam (i.e., high recall).  However, there were 25 spam messages that were misclassified as ham
+  (i.e., lower precision relative to recall).
+  
+  On a side note, it was interesting that 5 seemed to be an optimal value to set as the minimum term frequency.  I re-ran
+  the classifier with values of ranging from 1 through 10, and 5 had the best recall and precision scores.
