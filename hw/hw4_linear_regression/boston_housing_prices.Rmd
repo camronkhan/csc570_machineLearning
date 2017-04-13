@@ -6,16 +6,16 @@ output: html_notebook
 Camron Khan<br>
 April 2017
 
+<br>
+
 ## Dependencies
 
 ```{r}
 #install.packages("caret")
-#install.packages("ggplot2")
-#install.packages("AppliedPredictiveModeling")
 library(caret)
-library(ggplot2)
-library(reshape2)
 ```
+
+<br>
 
 ## Import Data
 
@@ -23,62 +23,89 @@ library(reshape2)
 rawData <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
 ```
 
+<br>
+
 ## EDA
 
-### Definitions
+<br>
 
-|Column   |Type   |Definition                                                               |
-|---------|-------|-------------------------------------------------------------------------|
-|X        |int    |index                                                                    |
-|crim     |real   |per capita crime rate by town                                            |
-|zn       |real   |proportion of residential land zoned for lots over 25,000 sq.ft          |
-|indus    |real   |proportion of non-retail business acres per town                         |
-|chas     |int    |Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)    |
-|nox      |real   |nitrogen oxides concentration (parts per 10 million)                     |
-|rm       |real   |average number of rooms per dwelling                                     |
-|age      |real   |proportion of owner-occupied units built prior to 1940                   |
-|dis      |real   |weighted mean of distances to five Boston employment centers             |
-|rad      |int    |index of accessibility to radial highways                                |
-|tax      |int    |full-value property-tax rate per \$10,000                                |
-|ptratio  |real   |pupil-teacher ratio by town                                              |
-|black    |real   |1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town           |
-|lstat    |real   |lower status of the population (percent)                                 |
-|medv     |real   |median value of owner-occupied homes in \$1000s (**Dependent Variable**) |
+### Summary
 
-### Summarize Data
+<br>
+Let's begin by taking an initial look at the data. It appears the index is included as a feature that we will need to remove from our dataframe. Most features are doubles; however, we have three features - *chas, rad, and tax* - that are integers. The feature *chas* is clearly categorical and has already been dummied; however, we must decide how to treat *rad* and *tax*. There's not enought information to make a clear judgment about *rad* - it's not clear if the "index of accessibility to radial highways" is referring to the number of access points availble or simply to an arbitrary scoring.  As a result, this variable must be dummied.  The feature *tax*, however, is referring to the property tax rate per $10,000. Therefore, this appears to be a continuous value. It may be worth performing a transformation on this feature to get the tax rate as a percent (i.e., divide by $10,000) for readability.
+
+```{r}
+feature <- as.vector(colnames(rawData))
+
+definition <- c("index", "per capita crime rate by town", "proportion of residential land zoned for lots over 25,000 sq.ft", "proportion of non-retail business acres per town", "Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)", "nitrogen oxides concentration (parts per 10 million)", "average number of rooms per dwelling", "proportion of owner-occupied units built prior to 1940", "weighted mean of distances to five Boston employment centers", "index of accessibility to radial highways", "full-value property-tax rate per $10,000", "pupil-teacher ratio by town", "1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town", "lower status of the population (percent)", "median value of owner-occupied homes in $1000s")
+
+dataDefinitions <- data.frame(feature, definition, stringsAsFactors = FALSE)
+
+dataDefinitions
+```
 
 ```{r}
 str(rawData)
 ```
 
-### Standardize Data
-
 ```{r}
-preprocessor = preProcess(rawData[2:15], c("center", "scale"))
-preprocessedData = data.frame(predict(preprocessor, rawData[2:15]))
+summary(rawData)
 ```
 
-### Distribution
+<br>
+
+### Distributions
+
+The features *crim, zn, nox, dis, and lstat* appear to be right-skewed and would likely benefit from a log transformation.  The features *age, ptratio, and black* appear to be left-skewed and would benefit from 
 
 ```{r}
-for (feature in names(preprocessedData)) {
-  plot <- ggplot(preprocessedData, aes(x = preprocessedData[[feature]]), binwidth = 2) + 
+for (feature in names(subset(rawData, select = -c(X, chas, rad)))) {
+  xlabel <- dataDefinitions$definition[dataDefinitions$feature == feature[1]]
+  plot <- ggplot(rawData, aes(x = rawData[[feature]]), binwidth = 2) + 
             geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5, bins = 40) + 
-            geom_density(colour = 'blue') + xlab(expression(bold('Values (Standardized)'))) + 
-            ylab(expression(bold('Density'))) + ggtitle(feature)
+            geom_density(colour = 'blue') +
+            xlab(xlabel) +
+            ylab('density') +
+            ggtitle(feature)
   print(plot)
 }
 ```
 
 
+```{r}
+ggplot(rawData, aes(x = rawData$dis), binwidth = 2) + 
+            geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5, bins = 40) + 
+            geom_density(colour = 'blue') + xlab(expression(bold('Values (Raw)'))) + 
+            ylab(expression(bold('Density'))) + ggtitle("dis")
+```
+
+
+```{r}
+ggplot(rawData, aes(x = log(rawData$dis)), binwidth = 2) + 
+            geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5, bins = 40) + 
+            geom_density(colour = 'blue') + xlab(expression(bold('Values (log)'))) + 
+            ylab(expression(bold('Density'))) + ggtitle("dis")
+```
+
+```{r}
+ggplot(rawData, aes(x = log10(rawData$dis)), binwidth = 2) + 
+            geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5, bins = 40) + 
+            geom_density(colour = 'blue') + xlab(expression(bold('Values (log10)'))) + 
+            ylab(expression(bold('Density'))) + ggtitle("dis")
+```
 
 
 
+<br>
 
+## Preprocessing
 
+<br>
+I will define a new dataframe for storing *preprocessed* data, and will begin preprocessing by removing the index column.
 
-
-
+```{r}
+preprocessedData <- rawData[c(-1)]
+```
 
 
 
