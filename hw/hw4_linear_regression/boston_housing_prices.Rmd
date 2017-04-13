@@ -7,26 +7,25 @@ Camron Khan<br>
 April 2017
 
 ## Dependencies
+
 ```{r}
 #install.packages("caret")
 #install.packages("ggplot2")
 #install.packages("AppliedPredictiveModeling")
-
 library(caret)
 library(ggplot2)
 library(reshape2)
-library(AppliedPredictiveModeling)
 ```
 
-## Data Source
-```r
-rawData <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
-```
+## Import Data
+
 ```{r}
 rawData <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
 ```
 
-## Definitions
+## EDA
+
+### Definitions
 
 |Column   |Type   |Definition                                                               |
 |---------|-------|-------------------------------------------------------------------------|
@@ -46,47 +45,44 @@ rawData <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
 |lstat    |real   |lower status of the population (percent)                                 |
 |medv     |real   |median value of owner-occupied homes in \$1000s (**Dependent Variable**) |
 
-## Data Summary
-like this
+### Summarize Data
+
 ```{r}
 str(rawData)
 ```
 
+### Standardize Data
 
 ```{r}
-#ggplot(melt(DATA), aes(x=value)) + geom_histogram() + facet_wrap(~variable)
-
-qplot(rawData$rm, geom = 'histogram', binwidth = .1) + xlab('')
-qplot(rawData$crim, geom = 'histogram', binwidth = 1) + xlab('')
-
-```
-
-
-
-
-
-```{r}
-preprocessor = preProcess(rawData[2:15], c("BoxCox", "center", "scale"))
+preprocessor = preProcess(rawData[2:15], c("center", "scale"))
 preprocessedData = data.frame(predict(preprocessor, rawData[2:15]))
 ```
 
-
-
-
-```{r}
-cor(rawData[,2:15])
-```
-
+### Distribution
 
 ```{r}
-cor(preprocessedData)
+for (feature in names(preprocessedData)) {
+  plot <- ggplot(preprocessedData, aes(x = preprocessedData[[feature]]), binwidth = 2) + 
+            geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5, bins = 40) + 
+            geom_density(colour = 'blue') + xlab(expression(bold('Values (Standardized)'))) + 
+            ylab(expression(bold('Density'))) + ggtitle(feature)
+  print(plot)
+}
 ```
 
 
 
-```{r, fig.width=15, fig.height=10}
-ggplot(melt(preprocessedData), aes(x=value)) + geom_histogram(binwidth = .5) + facet_wrap(~variable)
-```
+
+
+
+
+
+
+
+
+
+
+
 
 
 

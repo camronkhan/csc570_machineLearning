@@ -9,7 +9,6 @@
 #install.packages("AppliedPredictiveModeling")
 
 library(caret)
-library(AppliedPredictiveModeling)
 
 DATA <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
 
