@@ -25,14 +25,14 @@ rawData <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
 
 <br>
 
-## EDA
+## EDA: Part 1
 
 <br>
 
 ### Summary
 
 <br>
-Let's begin by taking an initial look at the data. It appears the index is included as a feature that we will need to remove from our dataframe. Most features are doubles; however, we have three features - *chas, rad, and tax* - that are integers. The feature *chas* is clearly categorical and has already been dummied; however, we must decide how to treat *rad* and *tax*. There's not enought information to make a clear judgment about *rad* - it's not clear if the "index of accessibility to radial highways" is referring to the number of access points availble or simply to an arbitrary scoring.  As a result, this variable must be dummied.  The feature *tax*, however, is referring to the property tax rate per $10,000. Therefore, this appears to be a continuous value. It may be worth performing a transformation on this feature to get the tax rate as a percent (i.e., divide by $10,000) for readability.
+Let's begin by taking an initial look at the data. It appears the index is included as a feature that we will need to remove from our dataframe. Most features are doubles; however, we have three features - *chas, rad, and tax* - that are integers. The feature *chas* is clearly categorical and has already been dummied; however, we must decide how to treat *rad* and *tax*. There's not enought information to make a clear judgment about *rad* - it's not clear if the "index of accessibility to radial highways" is referring to the number of access points availble or simply to an arbitrary scoring.  As a result, this variable must be dummied.  The feature *tax*, however, is referring to the property tax rate per $10,000. Therefore, this appears to be a continuous value. It may be worth performing a transformation on this feature to get the tax rate as a percent (i.e., divide by $10,000) for readability. The minimum values for all features except *zn* and *chas* are positive, and therefore, lend themselves to Box-Cox transformations, if required, to reduce skew.
 
 ```{r}
 feature <- as.vector(colnames(rawData))
@@ -88,7 +88,7 @@ ggplot(rawData, aes(x = log(rawData$dis)), binwidth = 2) +
 ```
 
 ```{r}
-ggplot(rawData, aes(x = log10(rawData$dis)), binwidth = 2) + 
+ggplot(rawData, aes(x = lapply(rawData$black, function(y) y^3)), binwidth = 2) + 
             geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5, bins = 40) + 
             geom_density(colour = 'blue') + xlab(expression(bold('Values (log10)'))) + 
             ylab(expression(bold('Density'))) + ggtitle("dis")
@@ -110,6 +110,11 @@ preprocessedData <- rawData[c(-1)]
 
 
 
+```{r}
+trans <- lapply(rawData$black, function(x) x^3)
+print(head(trans))
+print(head(rawData$black))
+```
 
 
 
