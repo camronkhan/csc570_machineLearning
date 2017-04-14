@@ -8,20 +8,21 @@ April 2017
 
 <br>
 
-## Dependencies
+## Setup
 
 ```{r}
 #install.packages("caret")
 library(caret)
 ```
 
-<br>
-
-## Import Data
-
 ```{r}
 rawData <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
 ```
+
+```{r}
+set.seed(1)
+```
+
 
 <br>
 
@@ -30,26 +31,30 @@ rawData <- read.csv('./Boston.csv', stringsAsFactors = FALSE)
 <br>
 
 **Data Types**<br>
-Most features are doubles; however, we have three features - *chas, rad, and tax* - that are integers. The feature *chas* is clearly categorical and has already been dummied; however, we must decide how to treat *rad* and *tax*. There's not enough information to make a clear judgment about *rad* - it's not clear if the "index of accessibility to radial highways" is referring to the number of access points availble or simply to an arbitrary scoring.  As a result, this variable must be dummied.  The feature *tax*, however, is referring to the property tax rate per \$10,000. Therefore, this appears to be better classified as a continuous value.
+Most features are doubles; however, we have three features - *chas, rad, and tax* - that are integers. The feature *chas* is clearly categorical and has already been dummied; however, we must decide how to treat *rad* and *tax*. There's not enough information to make a clear judgment about *rad* - it's not clear if the "index of accessibility to radial highways" is referring to the number of access points availble or simply to an arbitrary scoring.  As a result, this variable must be dummied.  The feature *tax*, however, is referring to the property tax rate per \$10,000. Therefore, this appears to be better classified as a continuous value. It appears the index is included as a feature that we will need to remove from our dataframe. We will consider additional features to prune later in the analysis.
 
-**Imputations**<br>
+**Missing Values**<br>
 Surprisingly, there are no missing values in this dataset; and therefore, there is no need for imputations.
-
-**Pruning**<br>
-It appears the index is included as a feature that we will need to remove from our dataframe. We will consider additional features to prune later in the analysis.
 
 **Variance**<br>
 TODO
 
 **Distributions**<br>
-Below are the distributions for continuous variables.
-- Normally Distributed: *rm*
-- Left-Skewed: *age*, *ptratio*, *black*
-- Right-Skewed: *crim*, *zn*, *nox*, *dis*, *lstat*, *medv*
-- Unclassified: *indus*, *tax*
+Below are the distributions for continuous variables:
+
+* Normally Distributed: *rm*
+* Left-Skewed: *age*, *ptratio*, *black*
+* Right-Skewed: *crim*, *zn*, *nox*, *dis*, *lstat*, *medv*
+* Unclassified: *indus*, *tax*
 
 **Transformations**<br>
 It may be worth performing a transformation on *tax* to get the tax rate as a percent (i.e., divide by \$10,000) for readability. All non-categorical features are postive with the exception of *zn*; therefore, we will need to devise a strategy for handling this feature if we want to use Box-Cox transformations to reduce skew.
+
+**Correlated Predicors**
+TODO
+
+**Linear Dependencies**
+TODO
 
 ```{r}
 feature <- as.vector(colnames(rawData))
@@ -75,6 +80,10 @@ print(missingValues)
 ```
 
 ```{r}
+print(nearZeroVar(rawData, saveMetrics = TRUE))
+```
+
+```{r}
 for (feature in names(subset(rawData, select = -c(X, chas, rad)))) {
   xlabel <- dataDefinitions$definition[dataDefinitions$feature == feature[1]]
   plot <- ggplot(rawData, aes(x = rawData[[feature]]), binwidth = 2) + 
@@ -92,7 +101,14 @@ for (feature in names(subset(rawData, select = -c(X, chas, rad)))) {
 ## Preprocessing
 
 <br>
-I will define a new dataframe for storing *preprocessed* data, and will begin preprocessing by removing the index column.
+
+**Steps**
+
+1. Define a new dataframe for storing preprocessed data
+2. Remove the index column *X*
+3. Parse *rad* to dummies
+4. Standardize values across features (i.e., center and scale)
+5. Perform transformations (Box-Cox?, Yeo-Johnson?, IHS?)
 
 ```{r}
 preprocessedData <- rawData[c(-1)]
