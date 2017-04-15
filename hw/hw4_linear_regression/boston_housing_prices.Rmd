@@ -106,15 +106,153 @@ for (feature in names(subset(rawData, select = -c(X, chas, rad)))) {
 
 1. Define a new dataframe for storing preprocessed data
 2. Remove the index column *X*
-3. Parse *rad* to dummies
-4. Standardize values across features (i.e., center and scale)
-5. Perform transformations (Box-Cox?, Yeo-Johnson?, IHS?)
+3. Parse *rad* to factor and transform to dummies
+4. Transform *tax* to base percent and parse to double
+6. Evaluate baseline performance
+7. Standardize values across features (i.e., center and scale)
+8. Perform Yeo-Johnson transformation
+9. Re-evaluate performance
 
 ```{r}
 preprocessedData <- rawData[c(-1)]
 
+preprocessedData$rad <- as.factor(preprocessedData$rad)
 
+preprocessedData <- as.data.frame(predict(dummyVars(~ ., data = preprocessedData), newdata = preprocessedData))
+
+preprocessedData$tax <- as.double(preprocessedData$tax / 10000)
+
+print(head(preprocessedData))
 ```
+
+```{r}
+## Baseline Performance
+
+lm.baseline <- lm(formula = medv ~ ., data = preprocessedData)
+
+print(summary(lm.baseline))
+```
+
+```{r}
+## Manual Transformation Performance
+
+preprocessedData.ck <- rawData[c(-1)]
+
+preprocessedData.ck$rad <- as.factor(preprocessedData.ck$rad)
+
+preprocessedData.ck <- as.data.frame(predict(dummyVars(~ ., data = preprocessedData.ck), newdata = preprocessedData.ck))
+
+preprocessedData.ck$tax <- as.double(preprocessedData.ck$tax / 10000)
+
+colsRightSkew <- c("crim", "nox", "dis", "lstat")
+
+preprocessedData.ck[colsRightSkew] <- log(preprocessedData.ck[colsRightSkew])
+
+colsLeftSkew <- c("age", "ptratio", "black")
+
+preprocessedData.ck[colsLeftSkew] <- (preprocessedData.ck[colsLeftSkew])^3
+
+preprocessor <- preProcess(preprocessedData.ck, method = c("center", "scale"))
+
+preprocessedData.ck <- predict(preprocessor, newdata = preprocessedData.ck)
+
+preprocessedData.ck$medv <- rawData$medv
+
+lm.ck <- lm(formula = medv ~ ., data = preprocessedData.ck)
+
+print(summary(lm.ck))
+```
+
+```{r}
+plot.ck <- subset(preprocessedData.ck, select = -c(chas, rad.1, rad.2, rad.3, rad.4, rad.5, rad.6, rad.7, rad.8, rad.24))
+for (feature in names(plot.ck)) {
+  xlabel <- dataDefinitions$definition[dataDefinitions$feature == feature[1]]
+  plot <- ggplot(preprocessedData.ck, aes(x = preprocessedData.ck[[feature]]), binwidth = 2) + 
+            geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5, bins = 40) + 
+            geom_density(colour = 'blue') +
+            xlab(xlabel) +
+            ylab('density') +
+            ggtitle(feature)
+  print(plot)
+}
+```
+
+```{r}
+## Yeo-Johnson Transformation Performance
+
+preprocessor <- preProcess(preprocessedData, method = c("center", "scale", "YeoJohnson"))
+
+preprocessedData.yj <- predict(preprocessor, newdata = preprocessedData)
+
+preprocessedData.yj$medv <- rawData$medv
+
+lm.yj <- lm(formula = medv ~ ., data = preprocessedData.yj)
+
+print(summary(lm.yj))
+```
+
+```{r}
+plot.yj <- subset(preprocessedData.yj, select = -c(chas, rad.1, rad.2, rad.3, rad.4, rad.5, rad.6, rad.7, rad.8, rad.24))
+for (feature in names(plot.yj)) {
+  xlabel <- dataDefinitions$definition[dataDefinitions$feature == feature[1]]
+  plot <- ggplot(preprocessedData.yj, aes(x = preprocessedData.yj[[feature]]), binwidth = 2) + 
+            geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5, bins = 40) + 
+            geom_density(colour = 'blue') +
+            xlab(xlabel) +
+            ylab('density') +
+            ggtitle(feature)
+  print(plot)
+}
+```
+
+```{r}
+## Box-Cox Transformation Performance (with zn removed)
+
+preprocessedData.bc <- subset(preprocessedData, select = -c(zn))
+
+preprocessor <- preProcess(preprocessedData.bc, method = c("center", "scale", "BoxCox"))
+
+preprocessedData.bc <- predict(preprocessor, newdata = preprocessedData.bc)
+
+preprocessedData.bc$medv <- rawData$medv
+
+lm.bc <- lm(formula = medv ~ ., data = preprocessedData.bc)
+
+print(summary(lm.bc))
+```
+
+```{r}
+plot.bc <- subset(preprocessedData.bc, select = -c(chas, rad.1, rad.2, rad.3, rad.4, rad.5, rad.6, rad.7, rad.8, rad.24))
+for (feature in names(plot.bc)) {
+  xlabel <- dataDefinitions$definition[dataDefinitions$feature == feature[1]]
+  plot <- ggplot(preprocessedData.bc, aes(x = preprocessedData.bc[[feature]]), binwidth = 2) + 
+            geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5, bins = 40) + 
+            geom_density(colour = 'blue') +
+            xlab(xlabel) +
+            ylab('density') +
+            ggtitle(feature)
+  print(plot)
+}
+```
+
+<br>
+
+## Multicollinearity
+
+```{r}
+descrCor <- cor(rawData)
+
+print(summary(descrCor[upper.tri(descrCor)]))
+
+highlyCorDescr <- findCorrelation(descrCor, cutoff = .75)
+
+rawData2 <- rawData[,-highlyCorDescr]
+
+descrCor2 <- cor(rawData2)
+
+print(summary(descrCor2[upper.tri(descrCor2)]))
+```
+
 
 
 
