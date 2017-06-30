@@ -1,0 +1,33 @@
+library(class)
+library(gmodels)
+# strings are not converted to factors when reading the csv file:
+a <- read.csv("Auto.csv", stringsAsFactors = FALSE)
+str(a)
+a$horsepower<-as.integer(a$horsepower)
+# since we  did not cover na.omit(), we will use another way for removing NAs:
+a<-a[!is.na(a$horsepower), ] 
+str(as.factor(a$name))
+# There are 391 names for 397 observations. We cannot expect a significant correlation between
+# mpg and name  and we will exclude the name attribute:
+a<-a[-9]
+cor(a) 
+# Here I am including cor(a) for future reference. We have not covered cor() at the time
+# of the homework. Instead of using cor(), you can use plot() 
+medmpg <- median(a$mpg)
+a$mpg1 <-  ifelse(a$mpg > medmpg, 1,0)
+# Acceleration, year, and origin do not correlate stronglyenough with mpg and
+# we will remove them
+a<-a[c("cylinders","displacement","horsepower","weight","mpg1")]
+set.seed(1)
+normalize <- function(x) {return ((x - min(x)) / (max(x) - min(x))) }
+# Since normalize does not change mpg1, we can normalize the entire data frame at once
+a<- as.data.frame(lapply(a, normalize))
+# Now, we can shuffle rows
+smpl <- sample(392,292)
+train<-a[smpl,1:4]
+test<-a[-smpl,1:4]
+train.labels<-a[smpl,5]
+test.labels<-a[-smpl,5]
+pred.labels<-knn(test=test,train=train, cl=train.labels,k=21)
+CrossTable(test.labels,pred.labels)
+
